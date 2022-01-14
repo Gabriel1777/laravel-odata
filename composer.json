@@ -10,5 +10,10 @@
             "name": "Luis Gabriel",
             "email": "lgcastellanos76@misena.edu.co"
         }
-    ]
+    ],
+    "autoload": {
+        "psr-4": {
+          "OData\\OData\\": "src/"
+        }
+    }
 }
