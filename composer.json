@@ -1,5 +1,5 @@
 {
-    "name": "laravel/odata",
+    "name": "apilaravelodata/odata",
     "description": "implemetaci\u0000n del protocolo OData para API Rest full en laravel",
     "type": "library",
     "require": { 
