@@ -2,7 +2,6 @@
 
 namespace OData\OData;
 
-use App\OData\ODataSchema;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Schema;
