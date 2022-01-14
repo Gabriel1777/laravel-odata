@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\OData;
+namespace OData\OData;
 
 use Illuminate\Support\Facades\DB;
 
