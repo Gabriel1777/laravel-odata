@@ -292,6 +292,22 @@ trait ODataModel {
 		);
 	}
 
+	protected function isRequestFile(){
+		return $this->pdf || $this->export;
+	}
+
+	protected function getFile(){
+		if ($this->pdf)
+        	return $this->getPdf();
+        else if ($this->export)
+        	return $this->export();
+	}
+
+	protected function setDefaultProperties(Array $data){
+		$data["length"] = $this->query_count;
+		return $data;
+	}
+
 	private function filterByOperator($items, $avoid, $operator){
 		for ($i = 0; $i < count($items); $i++){
 			for ($j = 0; $j < count($this->conditions); $j++){

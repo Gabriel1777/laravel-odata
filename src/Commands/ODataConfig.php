@@ -42,5 +42,6 @@ class ODataConfig extends Command
         $odata->clearConfig();
         $odata->setConfig();
         $odata->setQueries();
+        echo "Database schema stored successfully!";
     }
 }
