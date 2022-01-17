@@ -166,6 +166,14 @@ class ODataSchema {
 		return $items;
 	}
 
+	public function hasColumn($table, $column)
+	{
+		if (!array_key_exists($table, $this->map))
+			return false;
+
+		return in_array($column, $this->map[$table]);
+	}
+
 	public function hasRelation(String $table, String $referenced)
 	{
 		return $this->schema->filter(function($item) use ($table, $referenced){

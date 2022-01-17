@@ -330,7 +330,7 @@ trait ODataModel {
 				$this->executeInnerJoinQuery($operator, $cond, $index, $value, $field, $tables);
 			}
 			else{
-				if ($this->modelHasColumn($this->tab, $key)){
+				if ($this->odata->hasColumn($this->tab, $key)){
 					$column = $this->tab.".$key";
 				    $this->query = $this->searchByOperator($this->query, $operator, $column, $cond , $cond == "like" ? "%$value%" : $value);
 				}
@@ -405,9 +405,4 @@ trait ODataModel {
 
 		return $value;
 	}
-
-	private function modelHasColumn($table, $column){
-		return Schema::connection(config('database.default'))->hasColumn($table, $column);
-	}
-
 }
