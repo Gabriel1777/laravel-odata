@@ -23,7 +23,8 @@
                 "OData\\OData\\ODataServiceProvider"
             ],
             "aliases": {
-                "OData": "OData\\OData\\ODataModel"
+                "OData": "OData\\OData\\ODataModel",
+                "ODataResponse": "OData\\OData\\ODataTransform"
             }
         }
     }

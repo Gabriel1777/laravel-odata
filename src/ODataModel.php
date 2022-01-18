@@ -45,11 +45,14 @@ trait ODataModel {
 
 	protected $query_count;
 
+	protected $transformer;
+
 	public function setInstance(Model $model){
 		$this->model = $model;
 		$this->query = $this->model;
 		$this->tab = $this->model->table;
 		$this->odata = new ODataSchema();
+		$this->transformer = $model->transformer;
 		$this->conditions = [':', '!', '/', '>', '<'];
 	}
 
@@ -110,7 +113,7 @@ trait ODataModel {
 			$query = $this->query->defaultQuery()->select("{$this->tab}.*");
 			$this->query = $this->model->whereIn(
 			    "{$this->tab}.id",
-			    $query->pluck("id")->toArray()
+			    array_unique($query->pluck("id")->toArray())
 		    );
 		}
 	}
