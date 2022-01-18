@@ -63,8 +63,12 @@ trait ODataTransform
     	$collection = [];
 
     	foreach ($data as $item) {
-    		if ($type == 'model')
-    			$collection[] = $item;
+    		if ($type == 'model'){
+    			if (method_exists($this->model, 'transform'))
+    				$collection[] = $item->transform();
+    			else
+    			    $collection[] = $item;
+    		}
     		else
     		    $collection[] = $this->transformer->transform($item);
     	}

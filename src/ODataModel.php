@@ -209,8 +209,8 @@ trait ODataModel {
 	}
 
 	private function getQueryData(){
-		$this->setIncludes();
 		$this->setDefaultQuery();
+		$this->setIncludes();
 		$data = $this->query->get();
 		$this->query_count = $data->count();
 		$data = $this->orderBy($data);
