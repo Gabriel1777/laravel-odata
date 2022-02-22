@@ -10,7 +10,7 @@ class ODataDriver {
 	{
 		switch ($driver) {
 			case 'mysql':
-				return DB::select("SELECT table_name, column_name, constraint_name, referenced_table_name, referenced_column_name 
+				return DB::select("SELECT TABLE_NAME as 'table_name', COLUMN_NAME AS 'column_name', CONSTRAINT_NAME AS 'constraint_name', REFERENCED_TABLE_NAME AS 'referenced_table_name', REFERENCED_COLUMN_NAME AS 'referenced_column_name' 
 				FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '". $database ."';");
 				break;
 			case 'pgsql':
@@ -31,7 +31,7 @@ class ODataDriver {
 	{
 		switch ($driver) {
 			case 'mysql':
-				return DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = '". $database ."';");
+				return DB::select("SELECT TABLE_NAME AS 'table_name' FROM information_schema.tables WHERE table_schema = '". $database ."';");
 				break;
 			case 'pgsql':
 			    return DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
@@ -46,7 +46,7 @@ class ODataDriver {
 	{	
 		switch ($driver){
 			case 'mysql':
-			    return DB::select("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '". $database ."' AND TABLE_NAME = '". $table ."';");
+			    return DB::select("SELECT COLUMN_NAME AS 'column_name' FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '". $database ."' AND TABLE_NAME = '". $table ."';");
 			    break;
 			case 'pgsql':
 			    return DB::select("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = '". $table ."';");
