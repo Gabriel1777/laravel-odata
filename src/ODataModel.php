@@ -47,16 +47,19 @@ trait ODataModel {
 
 	protected $transformer;
 
-	public function setInstance(Model $model){
+	public function setInstance(Model $model)
+	{
 		$this->model = $model;
 		$this->query = $this->model;
 		$this->tab = $this->model->table;
 		$this->odata = new ODataSchema();
 		$this->transformer = $model->transformer;
+		$this->singular = config('odata.singular');
 		$this->conditions = [':', '!', '/', '>', '<'];
 	}
 
-	protected function setParams($params){
+	protected function setParams($params)
+	{
 		if (array_key_exists('top', $params))
 			$this->top = $params['top'];
 
@@ -94,7 +97,8 @@ trait ODataModel {
 			$this->orderByDesc = $params['orderByDesc'];
 	}
 
-	protected function getCollection(){
+	protected function getCollection()
+	{
         if ($this->filter)
             return $this->filterData();
         elseif ($this->select)
@@ -105,7 +109,8 @@ trait ODataModel {
             return $this->getAll();
 	}
 
-	protected function setDefaultQuery(){
+	protected function setDefaultQuery()
+	{
 		if (
 			(method_exists($this->model, 'defaultQuery') || method_exists($this->model, 'scopeDefaultQuery')) 
 			&& !$this->forceAll
@@ -118,7 +123,8 @@ trait ODataModel {
 		}
 	}
 
-	protected function orderBy($data){
+	protected function orderBy($data)
+	{
 		if ($this->orderBy)
             $data = $data->sortBy($this->orderBy);
         elseif  ($this->orderByDesc)
@@ -126,7 +132,8 @@ trait ODataModel {
         return $data;
 	}
 
-	protected function paginate($data){
+	protected function paginate($data)
+	{
 		if ($this->top){
         	$page = $this->page ? $this->page : 1;
         	$data = $data->forPage($page, $this->top);
@@ -134,7 +141,8 @@ trait ODataModel {
         return $data;
 	}
 
-	protected function setIncludes(){
+	protected function setIncludes()
+	{
 		if ($this->include){
 			$includes = explode(',', $this->include);
 		    foreach ($includes as $include){
@@ -144,7 +152,8 @@ trait ODataModel {
 		}
 	}
 
-	protected function trashedQuery($required = false){
+	protected function trashedQuery($required = false)
+	{
 		if ($this->hasSoftDelete()){
 			if ($this->trashed)
 			    $this->query = $this->model->onlyTrashed();
@@ -157,12 +166,14 @@ trait ODataModel {
 			$this->query = $this->model;
 	}
 
-	protected function getTrashedData(){
+	protected function getTrashedData()
+	{
 		$this->trashedQuery();
 		return $this->getQueryData();
 	}
 
-	protected function export(){
+	protected function export()
+	{
 		if ($this->filter)
 			$data = $this->filterData();
 		else
@@ -174,7 +185,8 @@ trait ODataModel {
 		return Excel::download(new $export($data),$fileName);
 	}
 
-	protected function getPdf(){
+	protected function getPdf()
+	{
 		if ($this->filter)
 			$data = $this->filterData();
 		else
@@ -183,11 +195,13 @@ trait ODataModel {
 		return $this->model->generatePdf($data, isset($_GET["download"]));
 	}
 
-	protected function getAll(){
+	protected function getAll()
+	{
 		return $this->getQueryData();
 	}
 
-	protected function filterData(){
+	protected function filterData()
+	{
 		$and = explode(',', $this->filter);
 		$or = explode('|', $this->filter);
 
@@ -208,7 +222,8 @@ trait ODataModel {
 		return $this->getQueryData();
 	}
 
-	private function getQueryData(){
+	private function getQueryData()
+	{
 		$this->setDefaultQuery();
 		$this->setIncludes();
 		$data = $this->query->get();
@@ -218,12 +233,14 @@ trait ODataModel {
 		return $data;
 	}
 
-	protected function filterSelectData(){
+	protected function filterSelectData()
+	{
 		$this->filterSelect();
 		return $this->getQueryData();
 	}
 
-	private function filterSelect(){
+	private function filterSelect()
+	{
 		$and = explode(',', $this->select);
 		$or = explode('|', $this->select);
 
@@ -247,7 +264,8 @@ trait ODataModel {
 		$this->query = $this->query->whereIn("{$this->tab}.id", $ids);
 	}
 
-	private function filterSelectOperation($items, $avoid, $operator){
+	private function filterSelectOperation($items, $avoid, $operator)
+	{
 		for ($i = 0; $i < count($items); $i++){
 			for ($j = 0; $j < count($this->conditions); $j++){
 				$cond = $this->conditions[$j];
@@ -266,7 +284,8 @@ trait ODataModel {
 		}
 	}
 
-	private function getSqlConditional($cond){
+	private function getSqlConditional($cond)
+	{
 		switch ($cond){
 		    case ":":
 		    	return "=";
@@ -288,30 +307,35 @@ trait ODataModel {
 		}
 	}
 
-	private function hasSoftDelete(){
+	private function hasSoftDelete()
+	{
 		return (
 			method_exists($this->model, 'trashed') &&
 			method_exists($this->model, 'forceDelete')
 		);
 	}
 
-	protected function isRequestFile(){
+	protected function isRequestFile()
+	{
 		return $this->pdf || $this->export;
 	}
 
-	protected function getFile(){
+	protected function getFile()
+	{
 		if ($this->pdf)
         	return $this->getPdf();
         else if ($this->export)
         	return $this->export();
 	}
 
-	protected function setDefaultProperties(Array $data){
+	protected function setDefaultProperties(Array $data)
+	{
 		$data["length"] = $this->query_count;
 		return $data;
 	}
 
-	private function filterByOperator($items, $avoid, $operator){
+	private function filterByOperator($items, $avoid, $operator)
+	{
 		for ($i = 0; $i < count($items); $i++){
 			for ($j = 0; $j < count($this->conditions); $j++){
 			    $this->filterByCondition(explode($this->conditions[$j], $items[$i]), $operator, $this->getSqlConditional($this->conditions[$j]) , $avoid, $i);
@@ -319,7 +343,8 @@ trait ODataModel {
 		}
 	}
 
-	private function filterByCondition($condition, $operator, $cond, $avoid, $index){
+	private function filterByCondition($condition, $operator, $cond, $avoid, $index)
+	{
 		if (count($condition) > 1){
 		    $key = $condition[0];
 		    $value = explode($avoid, $condition[1])[0];
@@ -329,6 +354,7 @@ trait ODataModel {
 				$tables = explode('.', $key);
 				$field = $tables[(count($tables) - 1)];
 				unset($tables[(count($tables) - 1)]);
+				$tables = $this->getTables($tables);
 
 				$this->executeInnerJoinQuery($operator, $cond, $index, $value, $field, $tables);
 			}
@@ -341,7 +367,8 @@ trait ODataModel {
 	    }
 	}
 
-	private function executeInnerJoinQuery($operator, $cond, $index, $value, $field, $tables){
+	private function executeInnerJoinQuery($operator, $cond, $index, $value, $field, $tables)
+	{
 		for ($i = 0; $i < count($tables); $i++){
 
 			$currentTable = $i == 0 ? $this->tab : $tables[($i - 1)];
@@ -380,7 +407,8 @@ trait ODataModel {
 		}
 	}
 
-	private function searchByOperator($query, $operator, $key, $condition, $value){
+	private function searchByOperator($query, $operator, $key, $condition, $value)
+	{
 		switch ($operator) {
 			case 'and':
 				return $query->where($key, $condition, $value);
@@ -394,7 +422,20 @@ trait ODataModel {
 		}
 	}
 
-    private function getAuthUserValue($value){
+	private function getTables($tables = [])
+	{
+		$finalTables = [];
+		foreach ($tables as $table) {
+			if (isset($this->singular[$table]))
+				$finalTables[] = $this->singular[$table];
+			else
+				$finalTables[] = $table;
+		}
+		return $finalTables;
+	}
+
+    private function getAuthUserValue($value)
+    {
 		$val = str_replace('{', '', $value);
 		$val = str_replace('}', '', $val);
 		$auth = explode("auth.user.", $val);
