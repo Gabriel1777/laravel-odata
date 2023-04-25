@@ -8,9 +8,9 @@ use OData\OData\Serializers\NoDataSerializer;
 
 trait ODataTransform
 {
-	use ODataModel;
+    use ODataModel;
 
-	protected function odataJsonResponse(Model $model)
+    protected function odataJsonResponse(Model $model)
     {
         $this->setParams($_GET);
         $this->setInstance($model);
@@ -21,26 +21,39 @@ trait ODataTransform
         return $this->getJsonResponse($this->getCollection());
     }
 
+    public function odataModelCollection(Model $model)
+    {
+        $this->setParams($_GET);
+        $this->setInstance($model);
+
+        $data = $this->getCollection();
+
+        if (isset($_GET["first"]))
+            $data = $data->first();
+
+        return $data;
+    }
+
     private function getJsonResponse($data)
     {
-    	if (!$this->transformer)
-    		return $this->defaultResponse($this->serializeData($data, 'model'));
+        if (isset($_GET["first"]))
+            $data = $data->first();
 
-    	$this->transformer = new $this->transformer;
+        if (!$this->transformer)
+            return $this->defaultResponse($this->serializeData($data, 'model'));
 
-    	if ($this->transformer instanceof TransformerAbstract)
+        $this->transformer = new $this->transformer;
+
+        if ($this->transformer instanceof TransformerAbstract)
             $collection = $this->getFractalTransformData($data);
         else
-        	$collection = $this->getDefaultTransformData($data);
+            $collection = $this->getDefaultTransformData($data);
 
         return $this->defaultResponse($collection);
     }
 
     private function getFractalTransformData($data)
     {
-    	if (isset($_GET["first"]))
-        	$data = $data->first();
-
         $transformation = fractal($data, $this->transformer)
             ->serializeWith(new NoDataSerializer());
 
@@ -52,37 +65,45 @@ trait ODataTransform
 
     private function getDefaultTransformData($data)
     {
-    	if (method_exists($this->transformer, 'transform'))
-    		return $this->serializeData($data, 'class');
-    	else
-    		return $this->serializeData($data, 'model');
+        if (method_exists($this->transformer, 'transform'))
+            return $this->serializeData($data, 'class');
+        else
+            return $this->serializeData($data, 'model');
     }
 
     private function serializeData($data, $type = 'class')
     {
-    	$collection = [];
+        $collection = [];
 
-    	foreach ($data as $item) {
-    		if ($type == 'model'){
-    			if (method_exists($this->model, 'transform'))
-    				$collection[] = $item->transform();
-    			else
-    			    $collection[] = $item;
-    		}
-    		else
-    		    $collection[] = $this->transformer->transform($item);
-    	}
+        foreach ($data as $item) {
+            if ($type == 'model'){
+                if (method_exists($this->model, 'transform'))
+                    $collection[] = $item->transform();
+                else
+                    $collection[] = $item;
+            }
+            else
+                $collection[] = $this->transformer->transform($item);
+        }
 
-    	return ['data' => $collection];
+        return ['data' => $collection];
     }
 
     private function defaultResponse($data)
-	{
-		$collection = $this->setDefaultProperties($data);
+    {
+        $collection = $this->setDefaultProperties($data);
 
-		if (method_exists($this, 'successResponse'))
-			return $this->successResponse($collection, 200);
+        if (method_exists($this, 'successResponse'))
+            return $this->successResponse($collection, 200);
 
-		return response()->json(['data' => $collection, 'code' => 200], 200);
-	}
+        return response()->json(['data' => $collection, 'code' => 200], 200);
+    }
+
+    public function odataProperties()
+    {
+        return [
+            "code" => 200,
+            "length" => $this->query_count
+        ];
+    }
 }

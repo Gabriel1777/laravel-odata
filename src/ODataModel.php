@@ -53,9 +53,10 @@ trait ODataModel {
 		$this->query = $this->model;
 		$this->tab = $this->model->table;
 		$this->odata = new ODataSchema();
+		$this->serializer = $model->serializer;
 		$this->transformer = $model->transformer;
 		$this->singular = config('odata.singular');
-		$this->conditions = [':', '!', '/', '>', '<'];
+		$this->conditions = [':', '!', '/', '>', '<', '°'];
 	}
 
 	protected function setParams($params)
@@ -139,6 +140,16 @@ trait ODataModel {
         	$data = $data->forPage($page, $this->top);
         }
         return $data;
+	}
+
+	public function serialize($data)
+	{
+		if ($this->serializer && method_exists($this->serializer, 'collectionSerializer')) {
+			$data = (new $this->serializer)->collectionSerializer($data);
+		} else if (method_exists($this->model, 'collectionSerializer')) {
+			$data = $this->model->collectionSerializer($data);
+		}
+		return $data;
 	}
 
 	protected function setIncludes()
@@ -230,6 +241,7 @@ trait ODataModel {
 		$this->query_count = $data->count();
 		$data = $this->orderBy($data);
         $data = $this->paginate($data);
+        $data = $this->serialize($data);
 		return $data;
 	}
 
@@ -269,7 +281,8 @@ trait ODataModel {
 		for ($i = 0; $i < count($items); $i++){
 			for ($j = 0; $j < count($this->conditions); $j++){
 				$cond = $this->conditions[$j];
-				$condition = explode($cond, $items[$i]);
+				$inValue = $this->findValueInCharacters($items[$i], "[", "]");
+				$condition = explode($cond, $inValue);
 
 				$sql_cond = $this->getSqlConditional($cond);
 
@@ -278,7 +291,7 @@ trait ODataModel {
 				    $field = $condition[0];
 				    $value = $condition[1];
 				    $value = $this->getAuthUserValue($value);
-				    $this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $sql_cond , $sql_cond == "like" ? "%$value%" : $value);
+				    $this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $sql_cond , $value);
 			    }
 			}
 		}
@@ -302,6 +315,8 @@ trait ODataModel {
 		    case "<":
 		    	return "<";
 		    break;
+		    case "°":
+		    	return "in";
 		    default:
 		    	return "=";
 		}
@@ -338,7 +353,8 @@ trait ODataModel {
 	{
 		for ($i = 0; $i < count($items); $i++){
 			for ($j = 0; $j < count($this->conditions); $j++){
-			    $this->filterByCondition(explode($this->conditions[$j], $items[$i]), $operator, $this->getSqlConditional($this->conditions[$j]) , $avoid, $i);
+				$value = $this->findValueInCharacters($items[$i], "[", "]");
+			    $this->filterByCondition(explode($this->conditions[$j], $value), $operator, $this->getSqlConditional($this->conditions[$j]) , $avoid, $i);
 			}
 		}
 	}
@@ -361,7 +377,7 @@ trait ODataModel {
 			else{
 				if ($this->odata->hasColumn($this->tab, $key)){
 					$column = $this->tab.".$key";
-				    $this->query = $this->searchByOperator($this->query, $operator, $column, $cond , $cond == "like" ? "%$value%" : $value);
+				    $this->query = $this->searchByOperator($this->query, $operator, $column, $cond , $value);
 				}
 			}
 	    }
@@ -390,14 +406,14 @@ trait ODataModel {
 					$this->query = $this->query->join($tables[$i] . " as $alias", "$alias.$id", $this->tab . "." . $foreign);
 
 					if (count($tables) == 1)
-						$this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $cond , $cond == "like" ? "%$value%" : $value)->select($this->tab.".*");
+						$this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $cond , $value)->select($this->tab.".*");
 				}
 				else{
 					$parentAlias = $tables[($i - 1)] . "-$index";
 					$this->query = $this->query->join($tables[$i] . " as $alias", "$alias.$id", $parentAlias . "." . $foreign);
 
 					if ($i == (count($tables) - 1)){
-						$this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $cond , $cond == "like" ? "%$value%" : $value)->select($this->tab.".*");
+						$this->query =  $this->searchByOperator($this->query, $operator, "$alias.$field", $cond , $value)->select($this->tab.".*");
 						$uniqueData = $this->query->pluck("id")->toArray();
 						$this->trashedQuery(true);
 						$this->query = $this->query->whereIn("{$this->tab}.id", $uniqueData);
@@ -409,6 +425,17 @@ trait ODataModel {
 
 	private function searchByOperator($query, $operator, $key, $condition, $value)
 	{
+		if ($condition == "like")
+			$value = "%$value%";
+		else if ($condition == "in") {
+			$value = explode("-", $value);
+
+			if ($operator == 'and')
+				return $query->whereIn($key, $value);
+			else if ($operator == 'or')
+				return $query->orWhereIn($key, $value);
+		}
+
 		switch ($operator) {
 			case 'and':
 				return $query->where($key, $condition, $value);
@@ -420,6 +447,19 @@ trait ODataModel {
 				return $query->where($key, $condition, $value);
 			break;
 		}
+	}
+
+	private function findValueInCharacters($value, $first, $last)
+	{
+		if (is_array($value))
+			$value = implode('', $value);
+
+		$hasFirst = explode($first, $value);
+		if (count($hasFirst) > 1) {
+			$hasLast = explode($last, $hasFirst[1]);
+			$value = $hasFirst[0] . "°" . $hasLast[0];
+		}
+		return $value;
 	}
 
 	private function getTables($tables = [])
