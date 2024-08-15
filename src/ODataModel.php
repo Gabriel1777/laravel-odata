@@ -436,6 +436,9 @@ trait ODataModel {
 				return $query->orWhereIn($key, $value);
 		}
 
+		if (config('database.default') == "pgsql")
+			$condition = "ilike";
+
 		switch ($operator) {
 			case 'and':
 				return $query->where($key, $condition, $value);
