@@ -117,6 +117,12 @@ trait ODataModel {
 			&& !$this->forceAll
 		){
 			$query = $this->query->defaultQuery()->select("{$this->tab}.*");
+
+			if ($this->all)
+				$this->model = $this->model->withTrashed();
+			else if ($this->trashed)
+				$this->model = $this->model->onlyTrashed();
+
 			$this->query = $this->model->whereIn(
 			    "{$this->tab}.id",
 			    array_unique($query->pluck("id")->toArray())
